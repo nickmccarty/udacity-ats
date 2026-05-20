@@ -450,8 +450,7 @@
     .chapter-table td { padding: 9px 14px; border-bottom: 1px solid rgba(23,26,83,0.07); color: var(--muted); }
     .chapter-table tr:last-child td { border-bottom: none; font-weight: 700; color: var(--navy); }
     .chapter-table .ts { font-family: 'Roboto Mono', monospace; color: var(--accent); font-size: .82rem; }
-    .chapter-table .ts[data-t] { cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
-    .chapter-table .ts[data-t]:hover { color: var(--navy); }
+    .chapter-table .ts[data-t] { cursor: default; }
     .chapter-table .dur { font-family: 'Roboto Mono', monospace; font-size: .82rem; }
     .chapter-bar-wrap { width: 120px; }
     .chapter-bar-bg { background: #e5e7eb; border-radius: 99px; height: 6px; overflow: hidden; }
@@ -684,9 +683,12 @@
     </div>
 
     <div class="video-wrap" style="margin-bottom:16px;">
-      <video id="lesson-video" controls style="width:100%;border-radius:8px;display:block;">
-        <source src="https://res.cloudinary.com/da8kzrluj/video/upload/sqlite-search-cache-lesson_cwpipw.mp4" type="video/mp4">
-      </video>
+      <iframe
+        src="https://player.cloudinary.com/embed/?cloud_name=da8kzrluj&public_id=sqlite-search-cache-lesson_yzkx0u"
+        allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+        allowfullscreen
+        frameborder="0"
+      ></iframe>
     </div>
 
     <div style="margin-bottom:48px;">
@@ -1388,17 +1390,6 @@ FONT_CODE = "Roboto Mono"
   }, { rootMargin: '-20% 0px -70% 0px' });
 
   sections.forEach(s => observer.observe(s));
-
-  // ── Timestamp seek ────────────────────────────────────────────────────────
-  document.querySelectorAll('.chapter-table .ts[data-t]').forEach(function(td) {
-    td.title = 'Jump to ' + td.textContent.trim() + ' in the video';
-    td.addEventListener('click', function() {
-      var v = document.getElementById('lesson-video');
-      v.currentTime = parseInt(this.dataset.t, 10);
-      v.play();
-      v.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
-  });
 
   // ── Mobile sidebar drawer ─────────────────────────────────────────────────
   var sidebar = document.querySelector('.sidebar');

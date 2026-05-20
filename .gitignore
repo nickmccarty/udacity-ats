@@ -1,0 +1,7 @@
+# Generated build artifacts -- do not commit
+video/slides/
+video/segments/
+video/.playwright-cli/
+
+# Final MP4 is hosted on Cloudinary; uncomment to exclude from repo
+# video/sqlite-search-cache-lesson.mp4

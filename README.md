@@ -3,6 +3,11 @@
 
 ---
 
+[![Preview of the live micro-lesson page — click to open](screenshot.png)](https://nickmccarty.me/udacity-ats)
+*Click the image above to open the live micro-lesson at **nickmccarty.me/udacity-ats***
+
+---
+
 ## Quick Start for Evaluators
 
 | Artifact | How to access |
@@ -40,6 +45,7 @@ The harness this lesson is built from ships two cache tables: `search_cache` (pe
 ```
 micro-lesson/course-4/
 +-- index.html                          # Primary web lesson (open in browser)
++-- screenshot.png                      # Page preview (linked in README; used as og:image)
 +-- sqlite-search-cache.pptx            # PPTX deck (Udacity template, 20" x 11.25")
 +-- sqlite_search_cache_colab.ipynb     # Jupyter notebook for Google Colab
 +-- sqlite-search-cache.md              # Lesson plan document
@@ -49,6 +55,7 @@ micro-lesson/course-4/
 +-- video/
     +-- produce_video.py                # E2E video production pipeline
     +-- sqlite-search-cache-lesson.mp4  # Final rendered video
+    +-- github-logo-animation.mp4       # Animated GitHub logo used in page footer
     +-- slides/                         # Generated animated HTML slides (01-11)
     +-- segments/                       # Intermediate .webm and .mp4 segment files
 ```

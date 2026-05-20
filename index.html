@@ -4,6 +4,23 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>The SQLite Search Cache &mdash; Harness Engineering Micro-Lesson</title>
+  <meta name="description" content="A production micro-lesson on building a SHA-256-keyed SQLite search cache with configurable TTL — eliminating redundant API calls across multi-session autoresearch workflows."/>
+  <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://nickmccarty.me/udacity-ats/"/>
+  <meta property="og:title" content="The SQLite Search Cache — Harness Engineering Micro-Lesson"/>
+  <meta property="og:description" content="A production micro-lesson on building a SHA-256-keyed SQLite search cache with configurable TTL — eliminating redundant API calls across multi-session autoresearch workflows."/>
+  <meta property="og:image" content="https://nickmccarty.me/udacity-ats/screenshot.png"/>
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="The SQLite Search Cache — Harness Engineering Micro-Lesson"/>
+  <meta name="twitter:description" content="A production micro-lesson on building a SHA-256-keyed SQLite search cache with configurable TTL — eliminating redundant API calls across multi-session autoresearch workflows."/>
+  <meta name="twitter:image" content="https://nickmccarty.me/udacity-ats/screenshot.png"/>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-YT69KZ91W7"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-YT69KZ91W7');
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet"/>
@@ -624,6 +641,79 @@
       .quiz-option { padding: 14px 12px; }
       main { padding: 20px 12px; }
       .pipe-cmd { font-size: .72rem; word-break: break-all; }
+    }
+
+    /* ── GitHub footer ─────────────────────────────────────────────────── */
+    .gh-footer {
+      margin-top: 72px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+    }
+    .gh-footer-link {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+      text-decoration: none;
+      transition: border-color .2s, box-shadow .2s;
+      box-shadow: 0 1px 4px rgba(23,26,83,0.06);
+    }
+    .gh-footer-link:hover {
+      border-color: rgba(23,26,83,0.3);
+      box-shadow: 0 4px 16px rgba(23,26,83,0.1);
+    }
+    .gh-logo-video {
+      width: 48px;
+      height: 48px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      background: #0d1117;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .gh-logo-video video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .gh-footer-text { flex: 1; min-width: 0; }
+    .gh-footer-eyebrow {
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--faint);
+      margin-bottom: 3px;
+    }
+    .gh-footer-heading {
+      font-size: .95rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 3px;
+    }
+    .gh-footer-desc {
+      font-size: .82rem;
+      color: var(--muted);
+      line-height: 1.5;
+      margin: 0;
+    }
+    .gh-footer-arrow {
+      flex-shrink: 0;
+      color: var(--faint);
+      transition: color .2s, transform .2s;
+    }
+    .gh-footer-link:hover .gh-footer-arrow {
+      color: var(--navy);
+      transform: translateX(3px);
+    }
+    @media (max-width: 480px) {
+      .gh-footer-link { gap: 14px; padding: 16px 16px; }
+      .gh-logo-video { width: 40px; height: 40px; }
     }
   </style>
 </head>
@@ -1327,6 +1417,31 @@ FONT_CODE = "Roboto Mono"
 # No template XML manipulation; all shapes added via python-pptx API.</code></pre>
     </div>
   </section>
+
+  <!-- GitHub footer -->
+  <footer class="gh-footer">
+    <a class="gh-footer-link"
+       href="https://github.com/nickmccarty/udacity-ats"
+       target="_blank"
+       rel="noopener noreferrer"
+       aria-label="View source code and micro-lesson material on GitHub">
+      <div class="gh-logo-video" aria-hidden="true">
+        <video autoplay muted loop playsinline>
+          <source src="video/github-logo-animation.mp4" type="video/mp4"/>
+        </video>
+      </div>
+      <div class="gh-footer-text">
+        <div class="gh-footer-eyebrow">Open Source</div>
+        <div class="gh-footer-heading">Code &amp; Micro-Lesson Material on GitHub</div>
+        <p class="gh-footer-desc">All source code, lesson assets, and implementation examples for this micro-lesson are freely available at <strong style="color:var(--navy)">nickmccarty/udacity-ats</strong>.</p>
+      </div>
+      <svg class="gh-footer-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        <path d="M5 12h14M12 5l7 7-7 7"/>
+      </svg>
+    </a>
+  </footer>
 
 </main>
 

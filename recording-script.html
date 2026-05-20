@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Recording Script -- SQLite Search Cache</title>
+  <style>
+    :root {
+      --bg: #0f141a; --surface: #141c28; --card: #192236;
+      --text: #dde8f4; --muted: #8ab4cc; --faint: #4d6f87;
+      --accent: #1776a4; --teal: #00C5A1;
+      --border: rgba(99,170,201,0.18);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{font-size:16px;scroll-behavior:smooth}
+    body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;display:flex;min-height:100vh}
+    .sidebar{width:260px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);padding:24px 16px;position:sticky;top:0;height:100vh;overflow-y:auto}
+    .sidebar h2{font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:12px}
+    .sidebar ol{padding-left:0;list-style:none;display:flex;flex-direction:column;gap:4px}
+    .sidebar li a{display:flex;gap:8px;align-items:flex-start;padding:7px 10px;border-radius:6px;color:var(--muted);font-size:.82rem;text-decoration:none;transition:background .15s}
+    .sidebar li a:hover{background:var(--card);color:var(--text)}
+    .toc-num{min-width:20px;font-weight:700;color:var(--accent)}
+    .sidebar em{font-size:.75rem;color:var(--faint)}
+    .timer-bar{background:var(--card);border-bottom:1px solid var(--border);padding:8px 24px;display:flex;align-items:center;gap:16px;font-size:.85rem;color:var(--muted)}
+    .timer-display{font-size:1.4rem;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;min-width:60px}
+    .timer-btn{padding:5px 14px;border-radius:4px;border:none;font-size:.82rem;font-weight:600;cursor:pointer}
+    .timer-start{background:#1776a4;color:#fff}
+    .timer-stop {background:#374151;color:#fff}
+    .timer-reset{background:transparent;color:var(--muted);border:1px solid var(--border)}
+    .main{flex:1;display:flex;flex-direction:column;min-width:0}
+    .slides{flex:1;padding:32px 40px;overflow-y:auto}
+    .slide{display:none;max-width:800px;margin:0 auto}
+    .slide.active{display:block}
+    .slide-header{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+    .slide-num{background:var(--accent);color:#fff;padding:3px 10px;border-radius:4px;font-size:.8rem;font-weight:700}
+    .slide-title{font-size:1.2rem;font-weight:700;color:var(--text)}
+    .slide-time{font-size:.78rem;color:var(--faint);margin-left:auto}
+    .script-body{font-size:1.25rem;line-height:2.0;color:var(--text);white-space:pre-wrap;font-weight:400;background:var(--card);padding:28px 32px;border-radius:10px;border:1px solid var(--border);letter-spacing:.01em}
+    .slide-nav{margin-top:20px;display:flex;gap:12px}
+    .slide-nav button{padding:8px 20px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:.9rem;cursor:pointer;transition:background .15s}
+    .slide-nav button:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+    .progress{height:3px;background:var(--border)}
+    .progress-fill{height:100%;background:var(--teal);transition:width .3s}
+    .kb-hint{padding:6px 24px;font-size:.72rem;color:var(--faint);border-top:1px solid var(--border)}
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <h2>Slides (7:35 total)</h2>
+  <ol>    <li><a href="#s1" onclick="goto(1); return false;"><span class="toc-num">1</span> Title Slide <em>~25s</em></a></li>
+    <li><a href="#s2" onclick="goto(2); return false;"><span class="toc-num">2</span> Learning Objective + Bloom's Taxonomy <em>~35s</em></a></li>
+    <li><a href="#s3" onclick="goto(3); return false;"><span class="toc-num">3</span> Prerequisites <em>~20s</em></a></li>
+    <li><a href="#s4" onclick="goto(4); return false;"><span class="toc-num">4</span> Try-and-Fail Opener <em>~50s</em></a></li>
+    <li><a href="#s5" onclick="goto(5); return false;"><span class="toc-num">5</span> Concept: Query Normalisation <em>~55s</em></a></li>
+    <li><a href="#s6" onclick="goto(6); return false;"><span class="toc-num">6</span> Concept: Schema + Eviction <em>~50s</em></a></li>
+    <li><a href="#s7" onclick="goto(7); return false;"><span class="toc-num">7</span> Demo: get() and put() <em>~65s</em></a></li>
+    <li><a href="#s8" onclick="goto(8); return false;"><span class="toc-num">8</span> Demo: cached_search() <em>~45s</em></a></li>
+    <li><a href="#s9" onclick="goto(9); return false;"><span class="toc-num">9</span> Hands-On Exercise <em>~30s</em></a></li>
+    <li><a href="#s10" onclick="goto(10); return false;"><span class="toc-num">10</span> Quiz <em>~35s</em></a></li>
+    <li><a href="#s11" onclick="goto(11); return false;"><span class="toc-num">11</span> Recap <em>~30s</em></a></li>
+    <li><a href="#s12" onclick="goto(12); return false;"><span class="toc-num">12</span> Outro / End Card <em>~15s</em></a></li></ol>
+</aside>
+
+<div class="main">
+  <div class="timer-bar">
+    <div class="timer-display" id="timerDisplay">0:00</div>
+    <button class="timer-btn timer-start" onclick="startTimer()">Start</button>
+    <button class="timer-btn timer-stop"  onclick="stopTimer()">Pause</button>
+    <button class="timer-btn timer-reset" onclick="resetTimer()">Reset</button>
+    <span id="timerStatus" style="margin-left:8px;font-size:.8rem"></span>
+  </div>
+  <div class="progress"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+  <div class="slides" id="slidesArea">
+
+  <div class="slide" id="s1">
+    <div class="slide-header">
+      <span class="slide-num">Slide 1</span>
+      <span class="slide-title">Title Slide</span>
+      <span class="slide-time">~25s | cumulative 0:25</span>
+    </div>
+    <div class="script-body">Hi, I'm Nick McCarty. This lesson solves a cost and latency problem
+that's invisible in single-session exercises but dominant in production
+autoresearch workflows.
+
+When autoresearch runs across multiple sessions, it re-issues the same
+web search queries on every loop -- burning API credits, hitting rate
+limits, and adding 30 to 90 seconds of latency per session with
+identical round-trips.
+
+We're going to build a SHA-256-keyed SQLite cache that intercepts
+queries before they reach the API. Sessions 2 through N make zero API
+calls for any query the cache has already seen.
+
+Let's get into it.</div>
+    <div class="slide-nav">
+      
+      <button onclick="goto(2)">Next &#8594;</button>
+    </div>
+  </div>
+  <div class="slide" id="s2">
+    <div class="slide-header">
+      <span class="slide-num">Slide 2</span>
+      <span class="slide-title">Learning Objective + Bloom's Taxonomy</span>
+      <span class="slide-time">~35s | cumulative 1:00</span>
+    </div>
+    <div class="script-body">Here's what you'll be able to do by the end of this lesson:
+
+Implement a cached_search() wrapper backed by SQLite that normalises
+query strings to cache keys via SHA-256, stores results with configurable
+TTL, serves cache hits without calling the API, and evicts expired entries
+on every write.
+
+The result: multi-session API call volume drops to zero for any repeated
+query within the TTL window.
+
+[gesture to Bloom's row]
+
+All six Bloom's levels. Remember the two cache tables and default TTL.
+Understand why normalisation must precede hashing. Apply the four-function
+implementation. Analyze a query log to measure waste. Evaluate the right
+TTL for different query types. And Create a complete two-table cache module.</div>
+    <div class="slide-nav">
+      <button onclick="goto(1)">&#8592; Prev</button>
+      <button onclick="goto(3)">Next &#8594;</button>
+    </div>
+  </div>
+  <div class="slide" id="s3">
+    <div class="slide-header">
+      <span class="slide-num">Slide 3</span>
+      <span class="slide-title">Prerequisites</span>
+      <span class="slide-time">~20s | cumulative 1:20</span>
+    </div>
+    <div class="script-body">Three prerequisites before we start.
+
+First: S-C4.3 Web Search -- you should know how to connect to DDGS,
+the search-then-fetch pattern, and how rate limiting works.
+
+Second: S-C4.1 Search Foundations -- context budget, per-query cost,
+the six search types.
+
+Third: intermediate Python -- specifically sqlite3, hashlib, json, and
+context managers.
+
+If you're solid on all three, let's move on.</div>
+    <div class="slide-nav">
+      <button onclick="goto(2)">&#8592; Prev</button>
+      <button onclick="goto(4)">Next &#8594;</button>
+    </div>
+  </div>
+  <div class="slide" id="s4">
+    <div class="slide-header">
+      <span class="slide-num">Slide 4</span>
+      <span class="slide-title">Try-and-Fail Opener</span>
+      <span class="slide-time">~50s | cumulative 2:10</span>
+    </div>
+    <div class="script-body">Before we build the cache, I want you to experience what it prevents.
+
+[gesture to code on screen]
+
+This stub simulates three autoresearch sessions. Each session issues the
+same four queries to the search API.
+
+Before I explain what happens, run it yourself.
+
+Then answer: how many of those API calls carried new information?
+
+[pause 5 seconds]
+
+Twelve total calls. Four per session times three sessions.
+
+But only four of them were novel. Sessions 2 and 3 paid API cost and
+wall time to retrieve results that were already available from session 1.
+
+Nothing errors. No warning is printed. The waste is silent.
+
+At production scale -- 12 queries, 10 sessions -- that's 108 redundant
+calls and 30 to 90 seconds of added latency every time autoresearch runs.
+
+This is the failure mode the cache eliminates.</div>
+    <div class="slide-nav">
+      <button onclick="goto(3)">&#8592; Prev</button>
+      <button onclick="goto(5)">Next &#8594;</button>
+    </div>
+  </div>
+  <div class="slide" id="s5">
+    <div class="slide-header">
+      <span class="slide-num">Slide 5</span>
+      <span class="slide-title">Concept: Query Normalisation</span>
+      <span class="slide-time">~55s | cumulative 3:05</span>
+    </div>
+    <div class="script-body">Here's the core insight of the whole lesson.
+
+SHA-256 is deterministic. The same bytes always produce the same digest.
+But it is completely case-sensitive and whitespace-sensitive.
+
+[gesture to counter-example]
+
+'Flash Attention' and 'flash attention' produce entirely different
+256-bit outputs. A double space between words produces a third key.
+Without normalisation, semantically identical queries are different keys.
+
+[gesture to the fix]
+
+The normalisation pipeline is three steps:
+
+query.lower() -- fold all uppercase to lowercase.
+
+.split() -- tokenise on any whitespace sequence: tabs, double spaces,
+newlines. This is the key step. split() with no argument splits on ALL
+whitespace, not just spaces.
+
+' '.join(...) -- rejoin with exactly one space between each token.
+
+Only then do we hash.
+
+[pause]
+
+This pattern is worth internalising as a default: every cache key derived
+from user input should normalise before hashing.</div>
+    <div class="slide-nav">
+      <button onclick="goto(4)">&#8592; Prev</button>
+      <button onclick="goto(6)">Next &#8594;</button>
+    </div>
+  </div>
+  <div class="slide" id="s6">
+    <div class="slide-header">
+      <span class="slide-num">Slide 6</span>
+      <span class="slide-title">Concept: Schema + Eviction</span>
+      <span class="slide-time">~50s | cumulative 3:55</span>
+    </div>
+    <div class="script-body">The schema is simple. Five columns in one table.
+
+[gesture to SQL]
+
+The primary key is the SHA-256 hex digest. We store the original query
+alongside it so we can reconstruct what was searched. Results are a JSON
+blob. created_at and expires_at are Unix float timestamps.
+
+The index on expires_at is critical. Without it, the eviction scan would
+be a full table scan. With it, it's O(log n) even at tens of thousands
+of rows.
+
+[gesture to inline eviction]
+
+Inline eviction is the architectural choice I want you to notice.
+
+Instead of a background timer or a cron job, we delete stale rows every
+time we write a new one. One DELETE WHERE expires_at &lt; now inside put().
+
+This keeps the database size bounded without adding operational complexity.
+No background thread. No scheduler. The database cleans itself as you use it.</div>
+    <div class="slide-nav">
+      <button onclick="goto(5)">&#8592; Prev</button>
+      <button onclick="goto(7)">Next &#8594;</button>
+    </div>
+  </div>
+  <div class="slide" id="s7">
+    <div class="slide-header">
+      <span class="slide-num">Slide 7</span>
+      <span class="slide-title">Demo: get() and put()</span>
+      <span class="slide-time">~65s | cumulative 5:00</span>
+    </div>
+    <div class="script-body">Here are both sides of the cache.
+
+[gesture to left panel -- get()]
+
+get() on the left. Normalise the query, compute the key, look up the row.
+If it's None, return None -- that's a MISS.
+
+If the row exists but expires_at is less than time.time(), the entry is
+stale. Delete it and return None -- that's an expired MISS.
+
+Otherwise, deserialise the JSON blob and return the results -- HIT.
+
+[gesture to right panel -- put()]
+
+put() on the right. Normalise, compute key, then the upsert.
+
+The SQL is INSERT INTO ... ON CONFLICT(key) DO UPDATE SET. If the same
+key is inserted twice -- say the cache was cleared and the query re-run
+within one session -- the upsert silently updates the existing row
+instead of erroring. This is essential for idempotent multi-session use.
+
+After the upsert: inline eviction. DELETE WHERE expires_at is less than now.
+
+Always commit and close in the finally block. No leaked connections.</div>
+    <div class="slide-nav">
+      <button onclick="goto(6)">&#8592; Prev</button>
+      <button onclick="goto(8)">Next &#8594;</button>
+    </div>
+  </div>
+  <div class="slide" id="s8">
+    <div class="slide-header">
+      <span class="slide-num">Slide 8</span>
+      <span class="slide-title">Demo: cached_search()</span>
+      <span class="slide-time">~45s | cumulative 5:45</span>
+    </div>
+    <div class="script-body">Here's the public interface callers use.
+
+[gesture to code]
+
+The logic is four lines. Call get(). If the result is not None, print
+'cache HIT' and return it. Otherwise, print 'cache MISS', call search_fn,
+call put() to store the results, and return them.
+
+[gesture to design choices below]
+
+Four design choices worth noting.
+
+First: search_fn is a Callable parameter. The wrapper is provider-agnostic.
+Pass DDGS, Tavily, Bing, or a test stub -- the cache doesn't care.
+
+Second: we only cache non-empty results. An empty list usually means
+the API failed or returned nothing. Caching that would return empty
+for 24 hours for a query that might succeed on retry.
+
+Third: the ttl kwarg allows per-query overrides. Short TTL for breaking
+news queries. Long TTL for evergreen research topics.
+
+Fourth: the HIT/MISS log labels are structured -- easy to grep across
+multi-session logs to measure cache hit rate in production.
+
+[gesture to call-site callout]
+
+The call site change is one line: replace search(q) with
+cached_search(q, search_fn=search, ttl=86400). That's it.</div>
+    <div class="slide-nav">
+      <button onclick="goto(7)">&#8592; Prev</button>
+      <button onclick="goto(9)">Next &#8594;</button>
+    </div>
+  </div>
+  <div class="slide" id="s9">
+    <div class="slide-header">
+      <span class="slide-num">Slide 9</span>
+      <span class="slide-title">Hands-On Exercise</span>
+      <span class="slide-time">~30s | cumulative 6:15</span>
+    </div>
+    <div class="script-body">Now it's your turn.
+
+[gesture to five parts]
+
+The starter skeleton is in search_cache_starter.py in this folder.
+
+Part 1: implement _cache_key() -- lowercase, collapse whitespace with
+split() and join(), return the SHA-256 hex digest.
+
+Part 2: implement get() -- lookup, expiry check, return json.loads or None.
+
+Part 3: implement put() -- upsert with ON CONFLICT DO UPDATE, inline
+DELETE WHERE expires_at is less than now.
+
+Part 4: implement cached_search() -- get() on hit path, search_fn plus
+put() on miss path.
+
+Part 5 -- the verification: replace search() in the broken stub with
+cached_search(). Re-run 3 sessions. Confirm: session 1 generates 4 MISS
+lines -- 4 API calls. Sessions 2 and 3 generate 4 HIT lines each -- zero
+API calls. Total: 4 API calls, down from 12.
+
+[pause]
+
+Take 20 to 30 minutes. The solution is in this folder.</div>
+    <div class="slide-nav">
+      <button onclick="goto(8)">&#8592; Prev</button>
+      <button onclick="goto(10)">Next &#8594;</button>
+    </div>
+  </div>
+  <div class="slide" id="s10">
+    <div class="slide-header">
+      <span class="slide-num">Slide 10</span>
+      <span class="slide-title">Quiz</span>
+      <span class="slide-time">~35s | cumulative 6:50</span>
+    </div>
+    <div class="script-body">One question before the recap.
+
+[read question on screen]
+
+Your cached_search() uses SHA-256 of the raw query string as the key.
+A user submits 'Flash Attention' in session 1 and 'flash attention' in
+session 2. The cache returns MISS and makes a second API call.
+
+What's the root cause and the correct fix?
+
+[gesture to options]
+
+Take a moment.
+
+[pause 5 seconds]
+
+The correct answer is B.
+
+The key was computed from the raw string. SHA-256 is case-sensitive,
+so 'Flash Attention' and 'flash attention' produce different digests.
+The fix: normalise with ' '.join(query.lower().split()) before hashing.
+
+A is wrong: LIKE on a SHA-256 column would never match anything useful.
+Digests have no prefix or substring structure.
+
+C is wrong: TTL controls validity duration, not whether two queries with
+different cases resolve to the same key.
+
+D is wrong: raw strings don't solve the case-mismatch problem, and they
+break on queries with special characters.</div>
+    <div class="slide-nav">
+      <button onclick="goto(9)">&#8592; Prev</button>
+      <button onclick="goto(11)">Next &#8594;</button>
+    </div>
+  </div>
+  <div class="slide" id="s11">
+    <div class="slide-header">
+      <span class="slide-num">Slide 11</span>
+      <span class="slide-title">Recap</span>
+      <span class="slide-time">~30s | cumulative 7:20</span>
+    </div>
+    <div class="script-body">Here's what you can do now that you couldn't before.
+
+[gesture to each point]
+
+You can explain why repeated autoresearch queries waste API calls across
+sessions, and why the failure is silent.
+
+You can normalise queries with ' '.join(query.lower().split()) before
+applying SHA-256 -- ensuring semantically identical queries always map
+to the same cache key.
+
+You can implement get() with expiry check and put() with upsert plus
+inline eviction.
+
+You can wrap any search callable with cached_search() in a single line
+change -- provider-agnostic, TTL-tunable.
+
+And you can choose the right TTL for different query types: short for
+breaking news, long for evergreen research topics.
+
+Sessions 2 through N now make zero API calls for repeated queries.
+For a 12-query loop running 10 sessions: 108 API calls saved. Per topic.
+Per day.
+
+Go build it.</div>
+    <div class="slide-nav">
+      <button onclick="goto(10)">&#8592; Prev</button>
+      <button onclick="goto(12)">Next &#8594;</button>
+    </div>
+  </div>
+  <div class="slide" id="s12">
+    <div class="slide-header">
+      <span class="slide-num">Slide 12</span>
+      <span class="slide-title">Outro / End Card</span>
+      <span class="slide-time">~15s | cumulative 7:35</span>
+    </div>
+    <div class="script-body">Thank you for watching.
+
+The full lesson materials -- lesson plan, starter code, and solution --
+are in the micro-lesson/course-4 folder.
+
+See you in the next lesson.</div>
+    <div class="slide-nav">
+      <button onclick="goto(11)">&#8592; Prev</button>
+      
+    </div>
+  </div>
+  </div>
+
+  <div class="kb-hint">Keyboard: &larr; &rarr; arrow keys to navigate &middot; Space to start/pause timer</div>
+</div>
+
+<script>
+  let current = 1;
+  const total = 12;
+  const totalSecs = 455;
+  let elapsed = 0;
+  let timerInterval = null;
+  const targets = {1: 25, 2: 35, 3: 20, 4: 50, 5: 55, 6: 50, 7: 65, 8: 45, 9: 30, 10: 35, 11: 30, 12: 15};
+  let slideStart = 0;
+
+  function goto(n) {
+    document.getElementById('s' + current)?.classList.remove('active');
+    current = Math.max(1, Math.min(n, total));
+    const sl = document.getElementById('s' + current);
+    if (sl) { sl.classList.add('active'); sl.scrollIntoView({block:'nearest'}); }
+    updateProgress();
+    slideStart = elapsed;
+  }
+
+  function updateProgress() {
+    const pct = ((current - 1) / total) * 100;
+    document.getElementById('progressFill').style.width = pct + '%';
+  }
+
+  function fmtTime(s) {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return m + ':' + String(sec).padStart(2, '0');
+  }
+
+  function startTimer() {
+    if (timerInterval) return;
+    timerInterval = setInterval(() => {
+      elapsed++;
+      document.getElementById('timerDisplay').textContent = fmtTime(elapsed);
+      const targetSec = targets[current] || 0;
+      const onSlide = elapsed - slideStart;
+      const status = document.getElementById('timerStatus');
+      if (targetSec > 0 && onSlide > targetSec + 5) {
+        status.textContent = 'Over by ' + (onSlide - targetSec) + 's';
+        status.style.color = '#ef4444';
+      } else if (targetSec > 0 && onSlide >= targetSec - 5) {
+        status.textContent = 'Almost done (~' + (targetSec - onSlide) + 's left)';
+        status.style.color = '#f59e0b';
+      } else {
+        status.textContent = '';
+      }
+    }, 1000);
+  }
+
+  function stopTimer() {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+
+  function resetTimer() {
+    stopTimer();
+    elapsed = 0;
+    document.getElementById('timerDisplay').textContent = '0:00';
+    document.getElementById('timerStatus').textContent = '';
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT') return;
+    if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); goto(current + 1); }
+    if (e.key === 'ArrowLeft'  || e.key === 'PageUp')   { e.preventDefault(); goto(current - 1); }
+    if (e.key === ' ') {
+      e.preventDefault();
+      timerInterval ? stopTimer() : startTimer();
+    }
+  });
+
+  goto(1);
+</script>
+</body>
+</html>

@@ -43,21 +43,25 @@ The harness this lesson is built from ships two cache tables: `search_cache` (pe
 ## File Inventory
 
 ```
-micro-lesson/course-4/
+udacity-ats/                            # Repo root
 +-- index.html                          # Primary web lesson (open in browser)
 +-- screenshot.png                      # Page preview (linked in README; used as og:image)
 +-- sqlite-search-cache.pptx            # PPTX deck (Udacity template, 20" x 11.25")
 +-- sqlite_search_cache_colab.ipynb     # Jupyter notebook for Google Colab
 +-- sqlite-search-cache.md              # Lesson plan document
 +-- recording-script.md                 # Full narration script with timestamps
++-- recording-script.html              # Interactive teleprompter (timer + keyboard nav)
 +-- build_deck.py                       # PPTX generation script (python-pptx)
++-- build_script.py                     # Generates recording-script.md and recording-script.html
 +-- README.md                           # This file
 +-- video/
     +-- produce_video.py                # E2E video production pipeline
     +-- sqlite-search-cache-lesson.mp4  # Final rendered video
     +-- github-logo-animation.mp4       # Animated GitHub logo used in page footer
-    +-- slides/                         # Generated animated HTML slides (01-11)
-    +-- segments/                       # Intermediate .webm and .mp4 segment files
+    +-- nick-profile.png                # Author profile image used in page footer
+    +-- slides/                         # Generated animated HTML slides (01-12)
+    +-- segments/                       # Intermediate .webm, .mp4, and .wav segment files
+        +-- concat_list.txt             # ffmpeg concat demuxer manifest
 ```
 
 ---
@@ -101,12 +105,14 @@ The rendered MP4 and PPTX are already included. To regenerate from source:
 
 ```bash
 # Video pipeline (~7 min, requires source WAV files)
-cd micro-lesson/course-4/video
+cd video
 python produce_video.py
 
-# PPTX deck
-cd micro-lesson/course-4
+# PPTX deck (from repo root)
 python build_deck.py
+
+# Recording scripts -- regenerates recording-script.md and recording-script.html
+python build_script.py
 ```
 
 **Requirements:** `playwright` with Chromium (`playwright install chromium`), `ffmpeg` on PATH, `python-pptx`

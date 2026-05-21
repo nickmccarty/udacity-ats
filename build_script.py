@@ -4,10 +4,10 @@ SQLite Search Cache micro-lesson, including slide cues, timing targets,
 and presenter notes formatted for easy reading on screen.
 
 Run:
-    python micro-lesson/course-4/build_script.py
+    python build_script.py
 Output:
-    micro-lesson/course-4/recording-script.md   -- markdown version
-    micro-lesson/course-4/recording-script.html -- standalone HTML teleprompter
+    recording-script.md   -- markdown version
+    recording-script.html -- standalone HTML teleprompter
 """
 
 from pathlib import Path
